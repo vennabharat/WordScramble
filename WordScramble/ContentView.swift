@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var usedWords = [String]()
     @State private var newWord = ""
     @State private var rootWord = "word scramble"
+    @State private var score = 0
     
     @State private var errorTitle = ""
     @State private var errorMessage = ""
@@ -42,12 +43,30 @@ struct ContentView: View {
             }message: {
                 Text(errorMessage)
             }
+            .toolbar{
+                Section{
+                    Text("Score: \(score)")
+                }
+                Section{
+                    Button("New Word", action: startGame)
+                }
+            }
         }
     }
     func addNewWord() {
         let answer = newWord.lowercased().components(separatedBy: .whitespacesAndNewlines)
-        guard answer.count > 0 else { return }
         
+        guard answer.count > 0 else { return }
+        guard newWord.count > 2 else {
+            wordError(title: "Too short", message: "Your word length should be atlest 3")
+            newWord = ""
+            return
+        }
+        guard newWord != rootWord else{
+            wordError(title: "Don't copy", message: "You cant copy the root word")
+            newWord = ""
+            return
+        }
         guard isOriginal(word: newWord) else {
             wordError(title: "Word used already", message: "Be more original")
             newWord = ""
@@ -66,6 +85,7 @@ struct ContentView: View {
         
         withAnimation{
             usedWords.insert(contentsOf: answer, at: 0)
+            score += 1
         }
         newWord = ""
     }
@@ -74,6 +94,7 @@ struct ContentView: View {
             if let contents = try? String(contentsOf: fileURL){
                 let allAnswers = contents.components(separatedBy: "\n")
                 rootWord = allAnswers.randomElement() ?? "slikworm"
+                score = 0
                 return
             }
         }
